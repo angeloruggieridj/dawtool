@@ -168,14 +168,26 @@ class AbletonProject(Project):
 
     @staticmethod
     def _find_tag(contents, tag, start=None):
-        start_tag = f"<{tag}>".encode()
+
+        if start is None:
+            start = 0
+
+        # Ableton 12.1 introduces tag with other attributes on it
+        start_tag_pattern = re.compile(f"<{tag}[^>]*>".encode())
         end_tag = f"</{tag}>".encode()
 
-        start_idx = contents.find(start_tag, start)
-        # TODO: what if not found?
+        # Cerca il tag di apertura
+        match = start_tag_pattern.search(contents, start)
+        if not match:
+            return None  # None if flag is not found
+
+        start_idx = match.start()
         end_idx = contents.find(end_tag, start_idx)
 
-        return contents[start_idx:end_idx+len(end_tag)]
+        if end_idx == -1:
+            return None  # None if no closed tag is find
+
+        return contents[start_idx:end_idx + len(end_tag)]
 
     def _parse_locators(self, contents):
         """
